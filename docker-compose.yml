@@ -1,0 +1,28 @@
+services:
+  api:
+    build:
+      context: .
+      args:
+          - USER_ID
+          - GROUP_ID
+    volumes:
+      - .:/app
+    ports:
+      - 58000:8000
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sl_db
+    ports:
+      - 55432:5432
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+volumes:
+  postgres:
