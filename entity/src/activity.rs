@@ -3,31 +3,31 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "schedule")]
+#[sea_orm(table_name = "activity")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub start_time: i32,
-    pub label: String,
-    pub order: i32,
-    pub personal_info_id: i32,
+    pub hours: i32,
+    pub name: String,
+    pub color: String,
+    pub day_id: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
-        belongs_to = "super::personal_info::Entity",
-        from = "Column::PersonalInfoId",
-        to = "super::personal_info::Column::Id",
+        belongs_to = "super::day::Entity",
+        from = "Column::DayId",
+        to = "super::day::Column::Id",
         on_update = "Cascade",
         on_delete = "Cascade"
     )]
-    PersonalInfo,
+    Day,
 }
 
-impl Related<super::personal_info::Entity> for Entity {
+impl Related<super::day::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::PersonalInfo.def()
+        Relation::Day.def()
     }
 }
 
