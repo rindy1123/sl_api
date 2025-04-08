@@ -40,6 +40,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .service(api::days::list_days)
             .service(api::days::create_day)
+            .service(api::days::get_day)
             .app_data(web::Data::new(state.clone()))
     })
     .bind(address)?

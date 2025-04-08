@@ -3,7 +3,8 @@ use entity::{activity, day};
 use log::error;
 use req::PostRequestBody;
 use res::{Activity, Day, Response};
-use sea_orm::{ActiveModelTrait, ActiveValue::Set, EntityTrait};
+use sea_orm::{ActiveModelTrait, ActiveValue::Set, EntityTrait, ModelTrait};
+use serde::Deserialize;
 
 use crate::AppState;
 
@@ -83,4 +84,53 @@ pub async fn list_days(state: web::Data<AppState>) -> HttpResponse {
     })
     .collect();
     HttpResponse::Ok().json(Response { days })
+}
+
+#[derive(Deserialize)]
+struct PathParams {
+    id: i32,
+}
+
+#[get("/days/{id}")]
+pub async fn get_day(path: web::Path<PathParams>, state: web::Data<AppState>) -> HttpResponse {
+    let conn = &state.conn;
+    let day_model: Option<day::Model> = match day::Entity::find_by_id(path.id).one(conn).await {
+        Ok(day) => day,
+        Err(e) => {
+            error!("Error fetching day: {:?}", e);
+            return HttpResponse::InternalServerError().finish();
+        }
+    };
+    let day_model: day::Model = match day_model {
+        Some(day) => day,
+        None => {
+            return HttpResponse::NotFound().finish();
+        }
+    };
+    let activities: Vec<activity::Model> =
+        match day_model.find_related(activity::Entity).all(conn).await {
+            Ok(activites) => activites,
+            Err(e) => {
+                error!("Error fetching activites: {:?}", e);
+                return HttpResponse::InternalServerError().finish();
+            }
+        };
+    let day = Day {
+        id: day_model.id,
+        title: day_model.title.clone(),
+        description: day_model.description.clone(),
+        country: day_model.country.clone(),
+        created_at: day_model.created_at.to_string(),
+        occupation: day_model.occupation.clone(),
+        activities: activities
+            .iter()
+            .map(|schedule| Activity {
+                id: schedule.id,
+                hours: schedule.hours,
+                name: schedule.name.clone(),
+                color: schedule.color.clone(),
+            })
+            .collect(),
+    };
+    HttpResponse::Ok().json(day)
 }
