@@ -41,6 +41,7 @@ async fn main() -> std::io::Result<()> {
             .service(api::days::list_days)
             .service(api::days::create_day)
             .service(api::days::get_day)
+            .service(api::ping::ping)
             .app_data(web::Data::new(state.clone()))
     })
     .bind(address)?
