@@ -2,6 +2,7 @@ FROM rust:latest AS builder
 WORKDIR /app
 
 COPY Cargo.toml .
+COPY Cargo.lock .
 COPY src src
 COPY migration migration
 COPY entity entity
