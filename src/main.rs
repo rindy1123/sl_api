@@ -1,10 +1,13 @@
 use std::env;
 
 use actix_cors::Cors;
-use actix_web::{middleware::Logger, web, App, HttpServer};
-use log::info;
+use actix_web::web::ServiceConfig;
+use actix_web::{middleware::Logger, web};
 use migration::{Migrator, MigratorTrait};
-use sea_orm::{Database, DatabaseConnection};
+use sea_orm::sqlx::PgPool;
+use sea_orm::{DatabaseConnection, SqlxPostgresConnector};
+use shuttle_actix_web::ShuttleActixWeb;
+use shuttle_runtime::SecretStore;
 
 mod api;
 
@@ -13,38 +16,36 @@ pub struct AppState {
     conn: DatabaseConnection,
 }
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    tracing_subscriber::fmt().with_test_writer().init();
-    let db_url = env::var("DATABASE_URL").unwrap();
-    let host = env::var("API_HOST").unwrap();
-    let port = env::var("API_PORT").unwrap();
-    let frontend_origin = env::var("FRONTEND_ORIGIN").unwrap();
-    let address = format!("{host}:{port}");
+#[shuttle_runtime::main]
+async fn main(
+    #[shuttle_shared_db::Postgres] pool: PgPool,
+    #[shuttle_runtime::Secrets] secrets: SecretStore,
+) -> ShuttleActixWeb<impl FnOnce(&mut ServiceConfig) + Send + Clone + 'static> {
+    let frontend_origin = secrets
+        .get("FRONTEND_ORIGIN")
+        .expect("FRONTEND_ORIGIN was not found");
 
-    let conn = Database::connect(&db_url).await.unwrap();
+    let conn = SqlxPostgresConnector::from_sqlx_postgres_pool(pool);
     Migrator::up(&conn, None).await.unwrap();
     let state = AppState { conn };
 
-    info!("Starting server at: {}", address);
-    HttpServer::new(move || {
+    let config = move |cfg: &mut ServiceConfig| {
         let logger = Logger::default();
         let cors = Cors::default()
             .allowed_origin(&frontend_origin)
             .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
             .allowed_headers(vec!["Content-Type"])
             .max_age(3600);
-
-        App::new()
-            .wrap(logger)
-            .wrap(cors)
-            .service(api::days::list_days)
-            .service(api::days::create_day)
-            .service(api::days::get_day)
-            .service(api::ping::ping)
-            .app_data(web::Data::new(state.clone()))
-    })
-    .bind(address)?
-    .run()
-    .await
+        cfg.service(
+            web::scope("/api")
+                .wrap(logger)
+                .wrap(cors)
+                .service(api::days::list_days)
+                .service(api::days::create_day)
+                .service(api::days::get_day)
+                .service(api::ping::ping),
+        )
+        .app_data(web::Data::new(state.clone()));
+    };
+    Ok(config.into())
 }
