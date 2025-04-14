@@ -2,12 +2,13 @@
 
 use sea_orm::entity::prelude::*;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
 #[sea_orm(table_name = "activity")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub hours: i32,
+    #[sea_orm(column_type = "Float")]
+    pub hours: f32,
     pub name: String,
     pub color: String,
     pub day_id: i32,
