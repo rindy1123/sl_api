@@ -3,7 +3,7 @@ use serde::Serialize;
 #[derive(Serialize, Debug)]
 pub struct Activity {
     pub id: i32,
-    pub hours: i32,
+    pub hours: f32,
     pub name: String,
     pub color: String,
 }

@@ -2,7 +2,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct Activity {
-    pub hours: u8,
+    pub hours: f32,
     pub name: String,
     pub color: String,
 }

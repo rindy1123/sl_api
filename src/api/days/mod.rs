@@ -36,7 +36,7 @@ pub async fn create_day(
         .activities
         .iter()
         .map(|activity| activity::ActiveModel {
-            hours: Set(activity.hours as i32),
+            hours: Set(activity.hours),
             name: Set(activity.name.clone()),
             color: Set(activity.color.clone()),
             day_id: Set(info.id),

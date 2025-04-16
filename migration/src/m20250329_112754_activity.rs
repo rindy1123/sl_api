@@ -39,7 +39,7 @@ impl MigrationTrait for Migration {
 }
 
 #[derive(DeriveIden)]
-enum Activity {
+pub enum Activity {
     Table,
     Id,
     DayId,
