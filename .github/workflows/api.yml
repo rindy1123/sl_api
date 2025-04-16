@@ -14,4 +14,4 @@ jobs:
           shuttle-api-key: ${{ secrets.SHUTTLE_API_KEY }}
           project-id: proj_01JRQH302GGH4WZZKEVQG98GMW
           secrets: |
-            FRONTEND_ORIGIN = https://shareditl.com
+            FRONTEND_ORIGIN = 'https://shareditl.com'
