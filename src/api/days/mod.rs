@@ -3,7 +3,7 @@ use entity::{activity, day};
 use log::error;
 use req::PostRequestBody;
 use res::{Activity, Day, Response};
-use sea_orm::{ActiveModelTrait, ActiveValue::Set, EntityTrait, ModelTrait};
+use sea_orm::{ActiveModelTrait, ActiveValue::Set, EntityTrait, ModelTrait, QueryOrder};
 use serde::Deserialize;
 
 use crate::AppState;
@@ -54,6 +54,7 @@ pub async fn create_day(
 pub async fn list_days(state: web::Data<AppState>) -> HttpResponse {
     let conn = &state.conn;
     let days: Vec<Day> = match day::Entity::find()
+        .order_by_desc(day::Column::CreatedAt)
         .find_with_related(activity::Entity)
         .all(conn)
         .await
